@@ -89,7 +89,7 @@ class EquilibriumOptimizer(Optimizer):
                 GCP = 0.5 * r1 if r2 > gp else 0.
                 G0 = GCP * (C_eq - _lambda * C)
                 G = G0 * F
-                self.population_[i] <- C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
+                self.population_[i] = C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
             iterno += 1
             if verbose:
                 print(f"finished epoch {iterno}.\n Best finess so far: {C_eq_fitness}")
