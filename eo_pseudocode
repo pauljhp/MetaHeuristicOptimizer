@@ -36,7 +36,7 @@ while iter <= max_iter:
         GCP = 0.5 * r1 if r2 > GP
         G0 = GCP (C_eq - lambda * C)
         G = G0 * F
-        population[i] <- C_eq + (C - _eq) * F + G / lambda * (1 - F)
+        population[i] <- C_eq + (C - C_eq) * F + G / lambda * (1 - F)
     }
     iter ++
 end while 
