@@ -220,6 +220,9 @@ class Solution(SearchSpace):
     def __iter__(self):
         return self.variables.__iter__()
     
+    def __getitem__(self, idx: int):
+        return self.variables[idx]
+    
     @property
     def is_legal(self) -> bool:
         return self.constraints.satisfied(self)
