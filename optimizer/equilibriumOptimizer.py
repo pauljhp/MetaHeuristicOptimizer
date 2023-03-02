@@ -42,10 +42,12 @@ class EquilibriumOptimizer(Optimizer):
         heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
+        """call this first"""
         for i in range(self.population_size):
             rand_mask = self.rng.uniform(low=0., high=1., size=self.dim)
-            self._population[i] = self.c_min + (self.c_max - self.c_min) * rand_mask
-            self._fitness[i] = self.fitness_fn(self._population[i])
+            self._population.append(
+                self.c_min + (self.c_max - self.c_min) * rand_mask)
+            self._fitness.append(self.fitness_fn(self._population[i]))
             self.update_equilibrium_pool(self._equilibrium_pool, self._population[i], self._fitness[i])
         self.population_ = self._population
 
@@ -55,13 +57,14 @@ class EquilibriumOptimizer(Optimizer):
                 gp: float=0.5,
                 ):
         iterno = 1
-        while i <= self.max_iter:
+        while iterno <= self.max_iter:
             t = (1 - iterno / self.max_iter) ** (alpha2 * iterno / self.max_iter)
             # update equilibrium pool
             for i in range(self.population_size):
                 C = self._population[i]
                 C_fit = self.fitness_fn(C)
                 self.update_equilibrium_pool(C, C_fit)
+
             # update population
             for i in range(self.population_size):
                 C = self.population_[i]
