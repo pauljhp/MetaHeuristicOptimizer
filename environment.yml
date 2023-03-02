@@ -1,6 +1,7 @@
 name: mhopt_env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - numpy
   - pandas

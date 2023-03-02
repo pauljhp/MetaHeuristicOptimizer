@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod, abstractclassmethod
 from typing import (Callable, Optional, Union, Sequence, 
-    LiteralString, Literal, List, Dict, Type, Any, NewType, TypeVar,
-    Tuple, Collection)
+    Literal, List, Dict, Type, Any, NewType, TypeVar,
+    Tuple, Collection, Iterable)
 import numpy as np
 import pandas as pd
 import networkx as nx
 import warnings
-import utils
+from .. import utils
 
 
 
@@ -18,10 +18,9 @@ class Optimizer(ABC):
     def solve(self):
         raise NotImplementedError
 
-# class Value
 
 class AllSet(set):
-    def __init__(*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     def __contains__(self, other) -> bool:
         return True
@@ -37,6 +36,8 @@ class Domain(set):
         """
         :param possiblevalues: if set to None, a special domain object
             will be created with no value restrictions.
+            If you want to create a domain with no possible values, pass
+            an empty Sequence to indicate no possible values
         """
         self.valuetype = Type
         if possiblevalues is not None:
@@ -67,23 +68,30 @@ Value = NewType("Value", Any)
 
 class Variable:
     def __init__(self,
-                 name: Union[LiteralString, int], 
+                 name: Union[str, int], 
                  value: Optional[Value]=None, 
                  domain: Optional[Domain]=None):
         """defines a node with name, value and domain
         :param name: name of the node. if not specified, can take any value
-        :param value: value of this node
+        :param value: value of this variable. optional. if not specified, 
+            this variable doesn't have a value yet and is not bound by value 
+            constraints
         """
         self.__name__ = name
         if domain is not None:
-            if value in domain:
-                self._domain = domain
-                self._value = value
+            if value is not None:
+                if value in domain:
+                    self._domain = domain
+                    self._value = value
+                else:
+                    raise ValueError(f"value should be in domain! Got value: {value}, which is not in domain: {domain}\n")
             else:
-                raise ValueError(f"value should be in domain! Got value: {value}, which is not in domain: {domain}\n")
+                self._domain = domain # skip value check
+            self._encoding_space = {i: v for i, v in enumerate(self._domain)}
         else:
-            self._domain = Domain(None)
+            self._domain = Domain(possiblevalues=None) # 
             self._value = None
+            self._encoding_space = None
     
     def __getattr__(self, attr) -> Union[Any, None]:
         if attr in self.__dict__:
@@ -107,7 +115,7 @@ class Variable:
     def name(self):
         return self.__name__
     @name.setter
-    def name(self, newname: Union[LiteralString, int]):
+    def name(self, newname: Union[str, int]):
         self.__name__ = newname
 
     @property 
@@ -131,7 +139,36 @@ class Variable:
         else:
             raise ValueError(f"value should be in domain! Got value: {newvalue}, which is not in domain: {self.domain}\n")
 
-Arc = NewType("Arc", Tuple[Any])
+class Arc(tuple):
+    def __new__(cls, 
+                iterable: Iterable, 
+                *args, **kwargs):
+        if iterable is not None:
+            iterable = list(iterable)
+        else: iterable = list()
+        if len(args):
+            iterable += args
+        if len(kwargs):
+            iterable += list(kwargs.values)
+        return super(Arc, cls).__new__(cls, tuple(iterable))
+    
+    def __init__(self, iterable: Iterable, *args, **kwargs):
+        iterable = list(iterable)
+        if len(args):
+            iterable += args
+        if len(kwargs):
+            iterable += list(kwargs.values)
+        self.__name__ = tuple((v.__name__ if "__name__" in dir(v) 
+                               else None for v in iterable ))
+
+    @property
+    def name(self):
+        return self.__name__
+    @name.setter
+    def name(self, newname: Tuple):
+        self.__name__ = newname
+
+
 Constraint = TypeVar("Constraint", bound=Callable)
 
 
@@ -140,23 +177,27 @@ class ArcConstraints:
                  constraint_arcs: Dict[Arc, Constraint]
                  ):
         """constraint_arcs is a dictionary of Arcs and Constraints.
-        Constraints are callables which take the arcs and return True or false
+        Constraints are callables which take the varibles in the arc
+        and return True or false
         """
         self.constraint_arcs = constraint_arcs
 
-    def satisfied(self) -> bool:
-        for arc, const in self.constraint_arcs.items():
-            if not const(arc):
-                return False
+    def satisfied(self, solution) -> bool:
+        variables = {s.name: s for s in solution}
+        for arcname, const in self.constraint_arcs.items():
+            varn1, varn2 = arcname
+            if varn1 in variables.keys() and varn2 in variables.keys():
+                var1, var2 = variables.get(varn1), variables.get(varn2)
+                arcvars = Arc((var1, var2))
+                if not const(arcvars):
+                    return False
         return True
-
-
 
 
 class SearchSpace:
     def __init__(self,
         variables: Collection[Variable],
-        constraints: Collection[ArcConstraints]
+        constraints: Optional[ArcConstraints]=None
         ):
         """
         :param variables: collection of the variables
@@ -164,9 +205,10 @@ class SearchSpace:
         """
         self.variables = variables
         self.constraints = constraints
-
-    # def _check_legality(self, solution):
-    #     return self._legality_check_fn(solution)
+    def max(self) -> List[int]:
+        return [max(v._enoding_space) for v in self.variables]
+    def min(self) -> List[int]:
+        return [min(v._encoding_space) for v in self.variables]
     
 class Solution(SearchSpace):
     def __init__(self,
@@ -180,7 +222,9 @@ class Solution(SearchSpace):
     
     @property
     def is_legal(self) -> bool:
-        return self.constraints.satisfied()
+        return self.constraints.satisfied(self)
+
+
 
 # class Solution(SearchSpace):
 #     def __init__(self,

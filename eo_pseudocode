@@ -1,0 +1,42 @@
+EquilibriumOptimizer: 
+/* hyper parameters: 
+    alpha1, alpha2, 
+    GP (0.5 by default), 
+    max_iter, 
+    N
+*/
+
+population = array[N]
+for (i, i < N, i++) {
+    rand = generate_rand(range=(0, 1), length=n)
+    population[i] = c_min + (c_max - c_min) * rand
+} // initialize population
+
+iter = 1
+while iter <= max_iter:
+    t = (1 - iter / max_iter) ^ (alpha2 * iter / max_iter)
+    // update equilibrium pool
+    for (i, i < N, i++) {
+        switch(fit(C_i)):
+            case fit(C_i) < fit(C_eq1): C_eq1 <- C_i
+            case fit(C_eq1) < fit(C_i) < fit(C_eq2): C_eq2 <- C_i
+            case fit(C_eq2) < fit(C_i) < fit(C_eq3): C_eq3 <- C_i
+            case fit(C_eq3) < fit(C_i) < fit(C_eq4): C_eq4 <- C_i
+        // if C_i is worse than C_eq4 then do nothing
+    } 
+    // update population
+    C_eqavg = mean(C_eq1, C_eq2, C_eq3, C_eq4)
+    for (i, i < N, i++) {
+        C = population[i]
+        C_eq = randomly_choose_from(equilibrium_pool)
+        generate randomly: vector lambda, vector r
+        F = alpha1 * sign(r - 0.5) * exp (-lambda * t)
+        // calculate G
+        r1, r2 = random((0, 1))
+        GCP = 0.5 * r1 if r2 > GP
+        G0 = GCP (C_eq - lambda * C)
+        G = G0 * F
+        population[i] <- C_eq + (C - _eq) * F + G / lambda * (1 - F)
+    }
+    iter ++
+end while 
