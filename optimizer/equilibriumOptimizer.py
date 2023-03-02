@@ -52,13 +52,18 @@ class EquilibriumOptimizer(Optimizer):
         self.population_ = self._population
 
     def optimize(self,
-                alpha1: float=0.2,
+                alpha1: float=0.1,
                 alpha2: float=0.1,
                 gp: float=0.5,
+                verbose: bool=False,
                 ):
         iterno = 1
         while iterno <= self.max_iter:
+            if verbose:
+                print(f"starting epoch {iterno}")
+            
             t = (1 - iterno / self.max_iter) ** (alpha2 * iterno / self.max_iter)
+            
             # update equilibrium pool
             for i in range(self.population_size):
                 C = self._population[i]
@@ -67,6 +72,7 @@ class EquilibriumOptimizer(Optimizer):
 
             # update population
             for i in range(self.population_size):
+                
                 C = self.population_[i]
                 rand_idx = self.rng.integers(low=0, high=4, size=1)[0]
                 if rand_idx < 4:
@@ -85,6 +91,6 @@ class EquilibriumOptimizer(Optimizer):
                 G = G0 * F
                 self.population_[i] <- C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
             i += 1
+            if verbose:
+                print(f"finished epoch {iterno}.\n Best finess so far: {C_eq_fitness}")
         return self
-
-    # FIXEME - to be completed
