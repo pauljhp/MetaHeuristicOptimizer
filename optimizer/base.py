@@ -15,7 +15,7 @@ class Optimizer(ABC):
         super(ABC, self).__init__()
 
     @abstractmethod
-    def solve(self):
+    def optimize(self):
         raise NotImplementedError
 
 
