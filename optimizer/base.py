@@ -209,6 +209,8 @@ class SearchSpace:
         return [max(v._encoding_space.keys()) for v in self.variables]
     def min(self) -> List[int]:
         return [min(v._encoding_space.keys()) for v in self.variables]
+    def __len__(self):
+        return len(self.variables)
     
 class Solution(SearchSpace):
     def __init__(self,
