@@ -87,6 +87,7 @@ class Variable:
                     raise ValueError(f"value should be in domain! Got value: {value}, which is not in domain: {domain}\n")
             else:
                 self._domain = domain # skip value check
+                self._value = value
             self._encoding_space = {i: v for i, v in enumerate(self._domain)}
         else:
             self._domain = Domain(possiblevalues=None) # 
