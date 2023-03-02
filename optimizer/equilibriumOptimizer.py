@@ -81,7 +81,7 @@ class EquilibriumOptimizer(Optimizer):
                 r1 = self.rng.uniform(low=0., high=1., size=1)[0]
                 r2 = self.rng.uniform(low=0., high=1., size=1)[0]
                 GCP = 0.5 * r1 if r2 > gp else 0.
-                G0 = GCP (C_eq - _lambda * C)
+                G0 = GCP * (C_eq - _lambda * C)
                 G = G0 * F
                 self.population_[i] <- C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
             i += 1
