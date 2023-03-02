@@ -2,9 +2,11 @@ import numpy as np
 import math
 import networkx as nx
 from .base import Optimizer
-from typing import Union, Optional, Tuple, List, Sequence, Callable
+from typing import Union, Optional, Tuple, List, Sequence, Callable, Self
 from argparse import ArgumentParser
 from ..utils import get_rng
+import heapq
+import math
 
 
 DEFAULT_SEED = 123
@@ -19,20 +21,66 @@ class EquilibriumOptimizer(Optimizer):
         search_space: Callable,
         seed: int,
         dim: int):
+        """minimizes by default"""
         self.population_size = population_size
         self.max_iter = max_iter
         self.fitness_fn = fitness_fn
         self.search_space = search_space
         self.rng = get_rng(seed)
         self.dim = dim
-        self._population = []
-        self.c_min = self.search_space.min()
+        self._population, self._fitness = [], []
+        self._equilibrium_pool = [(None, float("-inf"))] * 4
+        heapq.heapify(self._equilibrium_pool)
+        self.c_min = np.array(self.search_space.min())
+        self.c_max = np.array(self.search_space.max())
+
+    def update_equilibrium_pool(self,
+                                newval, 
+                                newcost) -> None:
+        """top 4 values maintained in a heapq"""
+        heapq.heappush((newval, newcost))
+        heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
         for i in range(self.population_size):
             rand_mask = self.rng.uniform(low=0., high=1., size=self.dim)
-            
+            self._population[i] = self.c_min + (self.c_max - self.c_min) * rand_mask
+            self._fitness[i] = self.fitness_fn(self._population[i])
+            self.update_equilibrium_pool(self._equilibrium_pool, self._population[i], self._fitness[i])
+        self.population_ = self._population
 
-
+    def optimize(self,
+                alpha1: float=0.2,
+                alpha2: float=0.1,
+                gp: float=0.5,
+                ) -> Self:
+        iterno = 1
+        while i <= self.max_iter:
+            t = (1 - iterno / self.max_iter) ** (alpha2 * iterno / self.max_iter)
+            # update equilibrium pool
+            for i in range(self.population_size):
+                C = self._population[i]
+                C_fit = self.fitness_fn(C)
+                self.update_equilibrium_pool(C, C_fit)
+            # update population
+            for i in range(self.population_size):
+                C = self.population_[i]
+                rand_idx = self.rng.integers(low=0, high=4, size=1)
+                if rand_idx < 4:
+                    C_eq, C_eq_fitness = self._equilibrium_pool[rand_idx]
+                else:
+                    C_eq = np.mean(self.population_[i] for i in [x for x, _ in self._equilibrium_pool])
+                    C_eq_fitness = np.mean([x for _, x in self._equilibrium_pool])
+                _lambda = self.rng.uniform(low=0., high=1., size=self.dim)
+                rnd = self.rng.uniform(low=0., high=1., size=1)[0]
+                F = alpha1 * math.sign(rnd - .5) * np.exp(- _lambda * t)
+                r1 = self.rng.uniform(low=0., high=1., size=1)[0]
+                r2 = self.rng.uniform(low=0., high=1., size=1)[0]
+                GCP = 0.5 * r1 if r2 > gp else 0.
+                G0 = GCP (C_eq - _lambda * C)
+                G = G0 * F
+                self.population_[i] <- C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
+            i += 1
+        return self
 
     # FIXEME - to be completed
