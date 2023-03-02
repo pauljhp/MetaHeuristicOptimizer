@@ -14,7 +14,7 @@ def sequence_to_rank(input: Sequence,
     """
     if expectedlen is not None:
         assert expectedlen == input, f"expected length must be the same as input! expected {expectedlen:.0f}, got {len(input)}"
-    ranks = rankdata(input)
+    ranks = rankdata(input).astype(np.int64)
     return ranks
 
 def get_rng(seed: int):
