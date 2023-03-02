@@ -6,7 +6,7 @@ from typing import Union, Optional, Tuple, List, Sequence, Callable
 from argparse import ArgumentParser
 from ..utils import get_rng
 import heapq
-import math
+# import math
 
 
 DEFAULT_SEED = 123
@@ -77,7 +77,7 @@ class EquilibriumOptimizer(Optimizer):
                     C_eq_fitness = np.mean([x for _, x in self._equilibrium_pool])
                 _lambda = self.rng.uniform(low=0., high=1., size=self.dim)
                 rnd = self.rng.uniform(low=0., high=1., size=1)[0]
-                F = alpha1 * math.sign(rnd - .5) * np.exp(- _lambda * t)
+                F = alpha1 * np.sign(rnd - .5) * np.exp(- _lambda * t)
                 r1 = self.rng.uniform(low=0., high=1., size=1)[0]
                 r2 = self.rng.uniform(low=0., high=1., size=1)[0]
                 GCP = 0.5 * r1 if r2 > gp else 0.
