@@ -68,7 +68,7 @@ class EquilibriumOptimizer(Optimizer):
             # update population
             for i in range(self.population_size):
                 C = self.population_[i]
-                rand_idx = self.rng.integers(low=0, high=4, size=1)
+                rand_idx = self.rng.integers(low=0, high=4, size=1)[0]
                 if rand_idx < 4:
                     C_eq_fitness, C_eq = self._equilibrium_pool[rand_idx]
                 else: # assign C_ave
