@@ -70,9 +70,10 @@ class EquilibriumOptimizer(Optimizer):
                 C = self.population_[i]
                 rand_idx = self.rng.integers(low=0, high=4, size=1)
                 if rand_idx < 4:
-                    C_eq, C_eq_fitness = self._equilibrium_pool[rand_idx]
-                else:
-                    C_eq = np.mean(self.population_[i] for i in [x for x, _ in self._equilibrium_pool])
+                    C_eq_fitness, C_eq = self._equilibrium_pool[rand_idx]
+                else: # assign C_ave
+                    C_ave = np.mean(self.population_[i] for i in [x for x, _ in self._equilibrium_pool])
+                    C_eq = C_ave
                     C_eq_fitness = np.mean([x for _, x in self._equilibrium_pool])
                 _lambda = self.rng.uniform(low=0., high=1., size=self.dim)
                 rnd = self.rng.uniform(low=0., high=1., size=1)[0]
