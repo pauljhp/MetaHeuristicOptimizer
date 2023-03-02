@@ -2,7 +2,7 @@ import numpy as np
 import math
 import networkx as nx
 from .base import Optimizer
-from typing import Union, Optional, Tuple, List, Sequence, Callable, Self
+from typing import Union, Optional, Tuple, List, Sequence, Callable
 from argparse import ArgumentParser
 from ..utils import get_rng
 import heapq
@@ -53,7 +53,7 @@ class EquilibriumOptimizer(Optimizer):
                 alpha1: float=0.2,
                 alpha2: float=0.1,
                 gp: float=0.5,
-                ) -> Self:
+                ):
         iterno = 1
         while i <= self.max_iter:
             t = (1 - iterno / self.max_iter) ** (alpha2 * iterno / self.max_iter)
