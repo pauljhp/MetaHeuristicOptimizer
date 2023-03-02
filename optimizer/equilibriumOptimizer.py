@@ -38,7 +38,7 @@ class EquilibriumOptimizer(Optimizer):
                                 newval, 
                                 newcost) -> None:
         """top 4 values maintained in a heapq"""
-        heapq.heappush((newval, newcost))
+        heapq.heappush(self._equilibrium_pool, (newval, newcost))
         heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
