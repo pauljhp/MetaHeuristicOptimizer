@@ -48,7 +48,7 @@ class EquilibriumOptimizer(Optimizer):
             self._population.append(
                 self.c_min + (self.c_max - self.c_min) * rand_mask)
             self._fitness.append(self.fitness_fn(self._population[i]))
-            self.update_equilibrium_pool(self._fitness[i], i)
+            self.update_equilibrium_pool(-self._fitness[i], i)
         self.population_ = self._population
 
     def optimize(self,
@@ -68,7 +68,7 @@ class EquilibriumOptimizer(Optimizer):
             for i in range(self.population_size):
                 C = self._population[i]
                 C_fit = self.fitness_fn(C)
-                self.update_equilibrium_pool(C_fit, i)
+                self.update_equilibrium_pool(-C_fit, i)
 
             # update population
             for i in range(self.population_size):
