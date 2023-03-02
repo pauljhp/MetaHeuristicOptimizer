@@ -206,7 +206,7 @@ class SearchSpace:
         self.variables = variables
         self.constraints = constraints
     def max(self) -> List[int]:
-        return [max(v._enoding_space.keys()) for v in self.variables]
+        return [max(v._encoding_space.keys()) for v in self.variables]
     def min(self) -> List[int]:
         return [min(v._encoding_space.keys()) for v in self.variables]
     
