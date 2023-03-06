@@ -29,7 +29,7 @@ class EquilibriumOptimizer(Optimizer):
         self.rng = get_rng(seed)
         self.dim = dim
         self._population, self._fitness = [], []
-        self._equilibrium_pool = [(None, float("-inf"))] * 4 # heap with the population index
+        self._equilibrium_pool = [(float("-inf"), None)] * 4 # heap with the population index
         heapq.heapify(self._equilibrium_pool)
         self.c_min = np.array(self.search_space.min())
         self.c_max = np.array(self.search_space.max())
@@ -38,10 +38,9 @@ class EquilibriumOptimizer(Optimizer):
                                 newval_idx, 
                                 newcost) -> None:
         """top 4 values maintained in a heapq"""
-        max_idx, max_val = max(self._equilibrium_pool)
-        min_idx, min_val = min(self._equilibrium_pool)
+        min_val, min_idx = min(self._equilibrium_pool)
         if min_val < newcost:
-            heapq.heappush(self._equilibrium_pool, (newval_idx, newcost))
+            heapq.heappush(self._equilibrium_pool, (newcost, newval_idx))
             heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
@@ -51,7 +50,7 @@ class EquilibriumOptimizer(Optimizer):
             self._population.append(
                 self.c_min + (self.c_max - self.c_min) * rand_mask)
             self._fitness.append(self.fitness_fn(self._population[i]))
-            self.update_equilibrium_pool(i, -self._fitness[i])
+            self.update_equilibrium_pool(-self._fitness[i], i)
         self.population_ = self._population
 
     def optimize(self,
@@ -71,7 +70,7 @@ class EquilibriumOptimizer(Optimizer):
             for i in range(self.population_size):
                 C = self._population[i]
                 C_fit = self.fitness_fn(C)
-                self.update_equilibrium_pool(i, -C_fit)
+                self.update_equilibrium_pool(-C_fit, i)
 
             # update population
             for i in range(self.population_size):
@@ -79,12 +78,12 @@ class EquilibriumOptimizer(Optimizer):
                 C = self.population_[i]
                 rand_idx = self.rng.integers(low=0, high=4, size=1)[0]
                 if rand_idx < 4:
-                    C_eq_idx, C_eq_fitness = self._equilibrium_pool[rand_idx]
+                    C_eq_fitness, C_eq_idx  = self._equilibrium_pool[rand_idx]
                     C_eq = self.population_[C_eq_idx]
                 else: # assign C_ave
-                    C_ave = np.mean(self.population_[i] for i in [x for x, _ in self._equilibrium_pool])
+                    C_ave = np.mean(self.population_[i] for i in [x for _, x in self._equilibrium_pool])
                     C_eq = C_ave
-                    C_eq_fitness = np.mean([x for _, x in self._equilibrium_pool])
+                    C_eq_fitness = np.mean([x for x, _ in self._equilibrium_pool])
                 _lambda = self.rng.uniform(low=0., high=1., size=self.dim)
                 rnd = self.rng.uniform(low=0., high=1., size=1)[0]
                 F = alpha1 * np.sign(rnd - .5) * np.exp(- _lambda * t)
