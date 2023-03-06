@@ -38,7 +38,7 @@ class EquilibriumOptimizer(Optimizer):
                                 newval_idx, 
                                 newcost) -> None:
         """top 4 values maintained in a heapq"""
-        heapq.heappush(self._equilibrium_pool, (newcost, newval_idx))
+        heapq.heappush(self._equilibrium_pool, (newval_idx, newcost))
         heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
@@ -68,7 +68,7 @@ class EquilibriumOptimizer(Optimizer):
             for i in range(self.population_size):
                 C = self._population[i]
                 C_fit = self.fitness_fn(C)
-                self.update_equilibrium_pool(-C_fit, i)
+                self.update_equilibrium_pool(i, -C_fit)
 
             # update population
             for i in range(self.population_size):
@@ -76,7 +76,8 @@ class EquilibriumOptimizer(Optimizer):
                 C = self.population_[i]
                 rand_idx = self.rng.integers(low=0, high=4, size=1)[0]
                 if rand_idx < 4:
-                    C_eq, C_eq_fitness = self._equilibrium_pool[rand_idx]
+                    C_eq_idx, C_eq_fitness = self._equilibrium_pool[rand_idx]
+                    C_eq = self.population_[C_eq_idx]
                 else: # assign C_ave
                     C_ave = np.mean(self.population_[i] for i in [x for x, _ in self._equilibrium_pool])
                     C_eq = C_ave
@@ -90,7 +91,8 @@ class EquilibriumOptimizer(Optimizer):
                 G0 = GCP * (C_eq - _lambda * C)
                 G = G0 * F
                 self.population_[i] = C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
-            iterno += 1
+            
             if verbose:
                 print(f"finished epoch {iterno}.\n Best finess so far: {C_eq_fitness}")
+            iterno += 1
         return self
