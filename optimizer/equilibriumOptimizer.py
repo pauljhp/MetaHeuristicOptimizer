@@ -38,8 +38,11 @@ class EquilibriumOptimizer(Optimizer):
                                 newval_idx, 
                                 newcost) -> None:
         """top 4 values maintained in a heapq"""
-        heapq.heappush(self._equilibrium_pool, (newval_idx, newcost))
-        heapq.heappop(self._equilibrium_pool)
+        max_idx, max_val = max(self._equilibrium_pool)
+        min_idx, min_val = min(self._equilibrium_pool)
+        if min_val < newcost < max_val:
+            heapq.heappush(self._equilibrium_pool, (newval_idx, newcost))
+            heapq.heappop(self._equilibrium_pool)
 
     def initialize(self):
         """call this first"""
@@ -48,7 +51,7 @@ class EquilibriumOptimizer(Optimizer):
             self._population.append(
                 self.c_min + (self.c_max - self.c_min) * rand_mask)
             self._fitness.append(self.fitness_fn(self._population[i]))
-            self.update_equilibrium_pool(-self._fitness[i], i)
+            self.update_equilibrium_pool(i, -self._fitness[i])
         self.population_ = self._population
 
     def optimize(self,
