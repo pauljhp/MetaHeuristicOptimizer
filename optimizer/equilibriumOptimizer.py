@@ -29,7 +29,7 @@ class EquilibriumOptimizer(Optimizer):
         self.rng = get_rng(seed)
         self.dim = dim
         self._population, self._fitness = [], []
-        self._equilibrium_pool = [(float("-inf"), None)] * 4 # heap with the population index
+        self._equilibrium_pool = [(None, float("-inf"))] * 4 # heap with the population index
         heapq.heapify(self._equilibrium_pool)
         self.c_min = np.array(self.search_space.min())
         self.c_max = np.array(self.search_space.max())
