@@ -40,7 +40,7 @@ class EquilibriumOptimizer(Optimizer):
         """top 4 values maintained in a heapq"""
         max_idx, max_val = max(self._equilibrium_pool)
         min_idx, min_val = min(self._equilibrium_pool)
-        if min_val < newcost < max_val:
+        if min_val < newcost:
             heapq.heappush(self._equilibrium_pool, (newval_idx, newcost))
             heapq.heappop(self._equilibrium_pool)
 
