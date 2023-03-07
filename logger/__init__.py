@@ -45,7 +45,11 @@ class Logger:
     
     def log(self, item_key: str, item_val: Any) -> None:
         if item_key in self.log_obj[-1].keys():
-            self.log_obj[-1][item_key] = item_val
+            if isinstance(self.log_obj[-1][item_key], List):
+                self.log_obj[-1][item_key] += item_val
+            elif isinstance(self.log_obj[-1][item_key], Dict):
+                assert isinstance(item_val, Dict):
+                self.log_obj[-1][item_key].update(item_val)
         else:
             self.log_obj[-1].update({item_key: item_val})
         self.write(self.log_obj, mode="overwrite")
