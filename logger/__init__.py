@@ -48,7 +48,7 @@ class Logger:
             if isinstance(self.log_obj[-1][item_key], List):
                 self.log_obj[-1][item_key] += item_val
             elif isinstance(self.log_obj[-1][item_key], Dict):
-                assert isinstance(item_val, Dict):
+                assert isinstance(item_val, Dict)
                 self.log_obj[-1][item_key].update(item_val)
         else:
             self.log_obj[-1].update({item_key: item_val})
