@@ -28,8 +28,12 @@ class Logger:
         if logpath is None: logpath = DEFAULT_LOGPATH
         self.logpath_obj = logpath if isinstance(logpath, Path) else Path(logpath)
         if not self.logpath_obj.exists():
-            self.logpath_obj.parent.mkdir()
+            self.logpath_obj.parent.mkdir(exist_ok=True)
+            self.logpath_obj.touch()
             self.log_obj = []
+            with self.logpath_obj.open("w") as f:
+                text = json.dumps(self.log_obj)
+                f.write(text)
         else:
             self.log_obj = json.load(self.logpath_obj.as_posix())
         assert isinstance(self.log_obj, List), "log file msut be in list format!"
