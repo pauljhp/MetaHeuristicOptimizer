@@ -6,6 +6,7 @@ from typing import Union, Optional, Tuple, List, Sequence, Callable
 from argparse import ArgumentParser
 from ..utils import get_rng
 import heapq
+from ..logger import Logger
 # import math
 
 
@@ -20,7 +21,9 @@ class EquilibriumOptimizer(Optimizer):
         fitness_fn: Callable,
         search_space: Callable,
         seed: int,
-        dim: int):
+        dim: int,
+        runno: Optional[int]=None,
+        logpath: Optional[str]=None):
         """minimizes by default"""
         self.population_size = population_size
         self.max_iter = max_iter
@@ -33,13 +36,18 @@ class EquilibriumOptimizer(Optimizer):
         heapq.heapify(self._equilibrium_pool)
         self.c_min = np.array(self.search_space.min())
         self.c_max = np.array(self.search_space.max())
-
+        self.runno = runno
+        self.logpath = logpath
+    
     def update_equilibrium_pool(self,
-                                newval_idx, 
-                                newcost) -> None:
-        """top 4 values maintained in a heapq"""
-        min_val, min_idx = min(self._equilibrium_pool)
-        if min_val < newcost:
+                                newcost,
+                                newval_idx,) -> None:
+        """top 4 values maintained in a heapq
+        equilibrium_pool: heapified list of (cost, index)
+        """
+        min_val, _ = min(self._equilibrium_pool)
+        idxs = [x for _, x in self._equilibrium_pool]
+        if min_val < newcost and not (newval_idx in idxs):
             heapq.heappush(self._equilibrium_pool, (newcost, newval_idx))
             heapq.heappop(self._equilibrium_pool)
 
@@ -58,7 +66,17 @@ class EquilibriumOptimizer(Optimizer):
                 alpha2: float=0.1,
                 gp: float=0.5,
                 verbose: bool=False,
+                log: bool=True
                 ):
+        if log:
+            self.logger = Logger(params=dict(
+                alpha1=alpha1,
+                alpha2=alpha2,
+                gp=gp,
+                population_size=self.population_size,
+                max_iter=self.max_iter),
+                runno=self.runno,
+                logpath=self.logpath if self.logpath else None)
         iterno = 1
         while iterno <= self.max_iter:
             if verbose:
@@ -96,5 +114,7 @@ class EquilibriumOptimizer(Optimizer):
             
             if verbose:
                 print(f"finished epoch {iterno}.\n Best finess so far: {C_eq_fitness}")
+            if log:
+                self.logger.log("performance", {f"epoch {iterno}": C_eq_fitness})
             iterno += 1
         return self
