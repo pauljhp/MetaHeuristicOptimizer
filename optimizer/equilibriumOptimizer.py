@@ -86,7 +86,7 @@ class EquilibriumOptimizer(Optimizer):
             
             # update equilibrium pool
             for i in range(self.population_size):
-                C = self._population[i]
+                C = self.population_[i]
                 C_fit = self.fitness_fn(C)
                 self.update_equilibrium_pool(-C_fit, i)
 
