@@ -5,6 +5,11 @@ import itertools
 import networkx as nx
 import re
 import copy
+import math
+from typing import Tuple
+
+
+EARTH_R = 6371.  # Earth radius in km
 
 
 def sequence_to_rank(input: Sequence, 
@@ -52,3 +57,18 @@ class Graph(nx.Graph):
     
     def is_neighbor(self, A, B) -> bool:
         return (B in self.neighbors(A))
+
+
+
+def distance_on_earth(loc1: Tuple[float], loc2: Tuple[float]):
+    """Calculate the distance between two locations in km using the Haversine formula."""
+
+    lat1, lon1 = loc1
+    lat2, lon2 = loc2
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 \
+        + math.cos(math.radians(lat1)) \
+            * math.cos(math.radians(lat2)) * math.sin(dlon/2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return EARTH_R * c
