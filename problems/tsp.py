@@ -16,6 +16,7 @@ def get_search_space(dataloc: str) -> SearchSpace:
         header=0, index_col=0)
 
     df = df.astype(np.float64)
+    df = df.dropna(how="all", axis=0).dropna(how="all", axis=1)
     net = nx.convert_matrix.from_pandas_adjacency(df)
     net = utils.Graph(graph=net)
 
@@ -34,7 +35,7 @@ def get_search_space(dataloc: str) -> SearchSpace:
     constraints[returnarc.name] = lambda arc: net.is_neighbor(arc[0].name, arc[1].name)
     arcconstraints = ArcConstraints(constraints)
     searchspace = SearchSpace(variables=variables, constraints=arcconstraints)
-    return searchspace           
+    return searchspace, net, variables      
 
 dpath = cwd.joinpath("MetaHeuristicOptimizer/problems/data/tsp_us_cities.csv")
 df = pd.read_csv(dpath.as_posix(),
