@@ -1,0 +1,116 @@
+{
+    "problem1": {
+        "projects": [
+            {
+                "cost": 1,
+                "profit": 2
+            },
+            {
+                "cost": 4,
+                "profit": 2.5
+            },
+            {
+                "cost": 1.2,
+                "profit": 3
+            },
+            {
+                "cost": 2.1,
+                "profit": 0.2
+            },
+            {
+                "cost": 5.2,
+                "profit": 0.4
+            },
+            {
+                "cost": 1,
+                "profit": 1
+            },
+            {
+                "cost": 9.5,
+                "profit": 5
+            },
+            {
+                "cost": 4,
+                "profit": 6
+            },
+            {
+                "cost": 15,
+                "profit": 20
+            },
+            {
+                "cost": 70,
+                "profit": 30
+            },
+            {
+                "cost": 15,
+                "profit": 10
+            },
+            {
+                "cost": 4,
+                "profit": 6
+            },
+            {
+                "cost": 6,
+                "profit": 5
+            }
+        ],
+        "capacity": 25
+    },
+    "problem2": {
+        "projects": [
+            {
+                "cost": 10,
+                "profit": 21
+            },
+            {
+                "cost": 4,
+                "profit": 2.5
+            },
+            {
+                "cost": 1.2,
+                "profit": 3
+            },
+            {
+                "cost": 2.1,
+                "profit": 0.2
+            },
+            {
+                "cost": 5.2,
+                "profit": 0.4
+            },
+            {
+                "cost": 10,
+                "profit": 1
+            },
+            {
+                "cost": 9.5,
+                "profit": 9.5
+            },
+            {
+                "cost": 4,
+                "profit": 3
+            },
+            {
+                "cost": 15,
+                "profit": 20
+            },
+            {
+                "cost": 70,
+                "profit": 42
+            },
+            {
+                "cost": 17,
+                "profit": 12
+            },
+            {
+                "cost": 6,
+                "profit": 2
+            },
+            {
+                "cost": 27,
+                "profit": 14
+            }
+        ],
+        "capacity": 70
+    }
+}

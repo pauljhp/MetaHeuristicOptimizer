@@ -60,6 +60,8 @@ class Domain(set):
         return self.possiblevalues.__len__()
     def __add__(self, other):
         return self.possiblevalues.union(other)
+    def __iter__(self):
+        return iter(self.possiblevalues)
     def union(self, other):
         return self.possiblevalues.union(other)
 
@@ -70,7 +72,8 @@ class Variable:
     def __init__(self,
                  name: Union[str, int], 
                  value: Optional[Value]=None, 
-                 domain: Optional[Domain]=None):
+                 domain: Optional[Domain]=None,
+                 attributes: Optional[Dict[str, Any]]=None):
         """defines a node with name, value and domain
         :param name: name of the node. if not specified, can take any value
         :param value: value of this variable. optional. if not specified, 
@@ -93,6 +96,9 @@ class Variable:
             self._domain = Domain(possiblevalues=None) # 
             self._value = None
             self._encoding_space = None
+        if attributes is not None:
+            self.attributes = attributes
+        else: self.attributes = dict()
     
     def __getattr__(self, attr) -> Union[Any, None]:
         if attr in self.__dict__:

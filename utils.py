@@ -6,10 +6,13 @@ import networkx as nx
 import re
 import copy
 import math
-from typing import Tuple
+from typing import Tuple, Optional, Literal
+from sklearn.preprocessing import Normalizer
 
 
 EARTH_R = 6371.  # Earth radius in km
+
+
 
 
 def sequence_to_rank(input: Sequence, 
@@ -72,3 +75,10 @@ def distance_on_earth(loc1: Tuple[float], loc2: Tuple[float]):
             * math.cos(math.radians(lat2)) * math.sin(dlon/2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return EARTH_R * c
+
+
+def normalize(input: np.ndarray, norm: Literal["l1", "l2", "max", "tanh"]="l2") -> np.ndarray:
+    if norm == "tanh":
+        return np.tanh(input)
+    normalizer = Normalizer(norm)
+    return normalizer.fit_transform(input)

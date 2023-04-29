@@ -2,9 +2,10 @@ import numpy as np
 import math
 import networkx as nx
 from .base import Optimizer
-from typing import Union, Optional, Tuple, List, Sequence, Callable
+from typing import Union, Optional, Tuple, List, Sequence, Callable, Literal
 from argparse import ArgumentParser
 from ..utils import get_rng
+from .. import utils
 import heapq
 from ..logger import Logger
 # import math
@@ -23,7 +24,9 @@ class EquilibriumOptimizer(Optimizer):
         seed: int,
         dim: int,
         runno: Optional[int]=None,
-        logpath: Optional[str]=None):
+        logpath: Optional[str]=None,
+        normalize: bool=True,
+        normalizer: Optional[Literal["l1", "l2", "max"]]="l2"):
         """minimizes by default"""
         self.population_size = population_size
         self.max_iter = max_iter
@@ -38,6 +41,8 @@ class EquilibriumOptimizer(Optimizer):
         self.c_max = np.array(self.search_space.max())
         self.runno = runno
         self.logpath = logpath
+        self.normalize = normalize
+        self.normalizer = normalizer
     
     def update_equilibrium_pool(self,
                                 newcost,
@@ -59,14 +64,23 @@ class EquilibriumOptimizer(Optimizer):
                 self.c_min + (self.c_max - self.c_min) * rand_mask)
             self._fitness.append(self.fitness_fn(self._population[i]))
             self.update_equilibrium_pool(-self._fitness[i], i)
-        self.population_ = self._population
+        self.population_ = np.array(self._population)
+        if self.normalize:
+            self.population_ = utils.normalize(norm=self.normalizer, input=self.population_)
+        self.pool_diversity_ = []
+        diversity = max(self._equilibrium_pool, key=lambda x: x[0])[0] - \
+            min(self._equilibrium_pool, key=lambda x: x[0])[0]
+        self.pool_diversity_.append(diversity )
+        self.best_so_far_ = []
+        self.best_so_far_.append(-max(self._equilibrium_pool, key=lambda x: x[0])[0])
 
     def optimize(self,
                 alpha1: float=0.1,
                 alpha2: float=0.1,
                 gp: float=0.5,
                 verbose: bool=False,
-                log: bool=True
+                log: bool=True,
+                momentum: float=0.,
                 ):
         if log:
             self.logger = Logger(params=dict(
@@ -78,6 +92,8 @@ class EquilibriumOptimizer(Optimizer):
                 runno=self.runno,
                 logpath=self.logpath if self.logpath else None)
         iterno = 1
+        self.alpha1_ = alpha1
+        self.alpha2_ = alpha2
         while iterno <= self.max_iter:
             if verbose:
                 print(f"starting epoch {iterno}")
@@ -89,6 +105,23 @@ class EquilibriumOptimizer(Optimizer):
                 C = self.population_[i]
                 C_fit = self.fitness_fn(C)
                 self.update_equilibrium_pool(-C_fit, i)
+
+            assert 0. <= momentum < 1., "momentum must be between 0 and 1!"
+            diversity_adjustment = (np.mean(self.pool_diversity_) - self.pool_diversity_[-1]) / np.mean(self.pool_diversity_) \
+                * momentum * (1 - alpha1) # if pool diversity is going down, increase alpha1
+            if len(self.best_so_far_) >= 5:
+                momentum_adjustment = ((self.best_so_far_[-1] - \
+                    np.mean(self.best_so_far_[-4:-1])) - \
+                        (self.best_so_far_[-2] - np.mean(self.best_so_far_[-5:-2]))) / \
+                        np.mean(self.best_so_far_) * (1 - alpha2) * momentum # exploit if fitness function has been improving 
+            else:
+                momentum_adjustment = 0
+            alpha1 += diversity_adjustment
+            alpha2 += momentum_adjustment
+            
+            self.alpha1_ = alpha1
+            self.alpha2_ = alpha2
+            
 
             # update population
             for i in range(self.population_size):
@@ -111,7 +144,14 @@ class EquilibriumOptimizer(Optimizer):
                 G0 = GCP * (C_eq - _lambda * C)
                 G = G0 * F
                 self.population_[i] = C_eq + (C - C_eq) * F + G / _lambda * (1 - F)
-            
+            self.best_so_far_.append(- max([fit for fit, _ in self._equilibrium_pool]))
+            diversity = max(self._equilibrium_pool, key=lambda x: x[0])[0] - \
+                min(self._equilibrium_pool, key=lambda x: x[0])[0]
+            self.pool_diversity_.append(diversity)
+        
+            if self.normalize:
+                self.population_ = utils.normalize(norm=self.normalizer, input=self.population_)
+
             if verbose:
                 print(f"finished epoch {iterno}.\n Best finess so far: {C_eq_fitness}")
             if log:
